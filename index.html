@@ -1,0 +1,780 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Колесо фортуны — 23 февраля (РБ)</title>
+  <style>
+    :root{
+      --bg:#f7fbff;
+      --card:#ffffff;
+      --text:#1f2937;
+      --muted:#6b7280;
+      --accent:#22c55e;
+      --accent2:#60a5fa;
+      --danger:#ef4444;
+      --shadow: 0 12px 30px rgba(15,23,42,.12);
+      --radius: 18px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: "Arial Rounded MT Bold","Nunito","Comic Sans MS",system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background: radial-gradient(1200px 600px at 20% 10%, #e8f6ff 0%, transparent 55%),
+                  radial-gradient(1200px 600px at 80% 20%, #eafff2 0%, transparent 55%),
+                  var(--bg);
+      color:var(--text);
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+    }
+    .wrap{
+      width:min(980px, 100%);
+      display:grid;
+      gap:16px;
+      grid-template-columns: 1fr;
+    }
+    .top{
+      background:var(--card);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:16px 18px;
+      display:flex;
+      gap:12px;
+      align-items:center;
+      justify-content:space-between;
+      flex-wrap:wrap;
+    }
+    .title{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
+    .title h1{
+      font-size:18px;
+      margin:0;
+      letter-spacing:.2px;
+    }
+    .title p{
+      margin:0;
+      color:var(--muted);
+      font-size:13px;
+    }
+    .stats{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    .pill{
+      background:#f1f5f9;
+      border-radius:999px;
+      padding:8px 12px;
+      font-size:13px;
+      color:#0f172a;
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+    .pill b{font-weight:800}
+    .main{
+      background:var(--card);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:16px;
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:16px;
+      align-items:center;
+      justify-items:center;
+    }
+    @media (min-width:860px){
+      .main{ grid-template-columns: 520px 1fr; align-items:start; }
+    }
+    .wheelBox{
+      width:min(520px,100%);
+      display:grid;
+      gap:10px;
+      justify-items:center;
+    }
+    .stage{
+      width:min(520px,100%);
+      aspect-ratio: 1 / 1;
+      position:relative;
+      display:grid;
+      place-items:center;
+    }
+    canvas{
+      width:100%;
+      height:100%;
+      border-radius:50%;
+      background: #fff;
+      box-shadow: inset 0 0 0 10px #eef2ff, 0 10px 24px rgba(2,6,23,.10);
+    }
+    .pointer{
+      position:absolute;
+      top:-4px;
+      left:50%;
+      transform:translateX(-50%);
+      width:0;height:0;
+      border-left:16px solid transparent;
+      border-right:16px solid transparent;
+      border-bottom:30px solid #111827;
+      filter: drop-shadow(0 4px 6px rgba(0,0,0,.2));
+    }
+    .controls{
+      width:100%;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:center;
+      align-items:center;
+    }
+    button{
+      border:0;
+      cursor:pointer;
+      border-radius:14px;
+      padding:12px 16px;
+      font-weight:800;
+      letter-spacing:.3px;
+      transition: transform .06s ease, filter .2s ease;
+      user-select:none;
+      font-family:inherit;
+    }
+    button:active{ transform: translateY(1px) scale(.99); }
+    .spin{
+      background: linear-gradient(135deg, var(--accent) 0%, #16a34a 100%);
+      color:white;
+      min-width:220px;
+      box-shadow: 0 10px 20px rgba(34,197,94,.25);
+    }
+    .spin:disabled{
+      filter: grayscale(.4) opacity(.65);
+      cursor:not-allowed;
+      box-shadow:none;
+    }
+    .reset{
+      background:#f1f5f9;
+      color:#0f172a;
+    }
+    .side{
+      width:100%;
+      display:grid;
+      gap:12px;
+    }
+    .card{
+      border-radius:var(--radius);
+      background:#fbfdff;
+      border:1px solid #eef2f7;
+      padding:14px;
+    }
+    .card h2{
+      margin:0 0 6px 0;
+      font-size:15px;
+    }
+    .card p{
+      margin:0;
+      font-size:13px;
+      color:var(--muted);
+      line-height:1.35;
+    }
+    .list{
+      margin:10px 0 0 0;
+      padding:0 0 0 18px;
+      color:#334155;
+      font-size:13px;
+      line-height:1.35;
+    }
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 10px;
+      border-radius:12px;
+      background:#ecfeff;
+      border:1px solid #cffafe;
+      color:#0f172a;
+      font-size:13px;
+      font-weight:700;
+    }
+
+    /* Modal */
+    .overlay{
+      position:fixed;
+      inset:0;
+      background:rgba(2,6,23,.55);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:16px;
+      z-index:999;
+    }
+    .overlay.show{ display:flex; }
+    .modal{
+      width:min(640px, 100%);
+      background:var(--card);
+      border-radius:22px;
+      box-shadow: 0 18px 50px rgba(0,0,0,.25);
+      padding:16px;
+    }
+    .modalTop{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:10px;
+    }
+    .modal h3{
+      margin:0;
+      font-size:16px;
+    }
+    .modal .hint{
+      margin:4px 0 0 0;
+      color:var(--muted);
+      font-size:12.5px;
+      line-height:1.35;
+    }
+    .xbtn{
+      background:#f1f5f9;
+      color:#0f172a;
+      padding:10px 12px;
+      border-radius:12px;
+      font-weight:900;
+    }
+    .field{
+      display:grid;
+      gap:8px;
+      margin-top:10px;
+    }
+    input{
+      width:100%;
+      padding:12px 12px;
+      border-radius:14px;
+      border:1px solid #e5e7eb;
+      outline:none;
+      font-family:inherit;
+      font-size:14px;
+      background:#fff;
+    }
+    input:focus{
+      border-color:#93c5fd;
+      box-shadow: 0 0 0 4px rgba(96,165,250,.18);
+    }
+    .actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:12px;
+      justify-content:flex-end;
+    }
+    .ok{
+      background: linear-gradient(135deg, var(--accent2), #2563eb);
+      color:white;
+      min-width:150px;
+      box-shadow: 0 10px 20px rgba(37,99,235,.22);
+    }
+    .feedback{
+      margin-top:10px;
+      padding:10px 12px;
+      border-radius:14px;
+      display:none;
+      font-size:13px;
+      line-height:1.35;
+      border:1px solid transparent;
+    }
+    .feedback.show{ display:block; }
+    .feedback.good{ background:#ecfdf5; border-color:#bbf7d0; color:#065f46; }
+    .feedback.bad{ background:#fef2f2; border-color:#fecaca; color:#7f1d1d; }
+    .small{
+      font-size:12px;
+      color:var(--muted);
+      margin-top:8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="title">
+        <h1>🎡 «Колесо фортуны» — 23 февраля (Республика Беларусь)</h1>
+        <p>Крути колесо, отвечай на вопрос, получай баллы. Секторы не повторяются.</p>
+      </div>
+      <div class="stats">
+        <div class="pill">⭐ Баллы: <b id="score">0</b></div>
+        <div class="pill">🎯 Осталось: <b id="left">16</b></div>
+        <div class="badge" id="status">Готово к старту</div>
+      </div>
+    </div>
+
+    <div class="main">
+      <div class="wheelBox">
+        <div class="stage">
+          <div class="pointer" aria-hidden="true"></div>
+          <canvas id="wheel" width="900" height="900"></canvas>
+        </div>
+        <div class="controls">
+          <button class="spin" id="spinBtn">КРУТИ КОЛЕСО</button>
+          <button class="reset" id="resetBtn" title="Сбросить игру">Сброс</button>
+        </div>
+      </div>
+
+      <div class="side">
+        <div class="card">
+          <h2>Как играть</h2>
+          <p>Нажимай «КРУТИ КОЛЕСО». Колесо остановится на случайном секторе. Он станет серым, а тебе выпадет вопрос.</p>
+          <ul class="list">
+            <li>Вопросы не повторяются.</li>
+            <li>За правильный ответ +1 балл.</li>
+            <li>Когда вопросы закончатся — можно начать заново.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h2>Подсказка для ведущего</h2>
+          <p>Для малышей (4–6) можно принимать короткие ответы, для старших (7–12) — просить полное предложение.</p>
+          <p class="small">Примечание: проверка ответов здесь простая (по ключевым словам/вариантам). При желании можно сделать “ответ принимает ведущий”.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-labelledby="qTitle">
+    <div class="modal">
+      <div class="modalTop">
+        <div>
+          <h3 id="qTitle">Вопрос</h3>
+          <p class="hint" id="qText"></p>
+        </div>
+        <button class="xbtn" id="closeX" title="Закрыть">✕</button>
+      </div>
+
+      <div class="field">
+        <label for="answer"><b>Твой ответ:</b></label>
+        <input id="answer" type="text" placeholder="Напиши ответ..." autocomplete="off" />
+      </div>
+
+      <div class="feedback" id="feedback"></div>
+
+      <div class="actions">
+        <button class="reset" id="skipBtn" title="Закрыть без начисления баллов">Закрыть</button>
+        <button class="ok" id="submitBtn">Проверить</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('wheel');
+  const ctx = canvas.getContext('2d');
+
+  const spinBtn = document.getElementById('spinBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const scoreEl = document.getElementById('score');
+  const leftEl  = document.getElementById('left');
+  const statusEl= document.getElementById('status');
+
+  const overlay = document.getElementById('overlay');
+  const qText = document.getElementById('qText');
+  const answerInp = document.getElementById('answer');
+  const submitBtn = document.getElementById('submitBtn');
+  const skipBtn = document.getElementById('skipBtn');
+  const closeX = document.getElementById('closeX');
+  const feedback = document.getElementById('feedback');
+
+  // 16 вопросов (РБ, 23 февраля)
+  const questions = [
+    { q:"Как называется праздник, который отмечают 23 февраля?",
+      a:[ "день защитника отечества", "день защитников отечества", "день защитника", "день защитников" ] },
+
+    { q:"Кого поздравляют в этот день?",
+      a:[ "мужчин", "мальчиков", "пап", "дедушек", "защитников", "военных" ] }, // ключевые слова
+
+    { q:"Что означает слово «Отечество»?",
+      a:[ "родина", "моя страна", "страна", "родная страна" ] },
+
+    { q:"Как называется главный символ нашей страны с красно-зелёными цветами?",
+      a:[ "флаг", "государственный флаг", "флаг беларуси", "флаг белоруссии", "госфлаг" ] },
+
+    { q:"Какие цвета есть на Государственном флаге Республики Беларусь?",
+      a:[ "красный и зеленый и белый", "красный зелёный белый", "красный зеленый белый", "красный и зеленый", "красный и зелёный" ] },
+
+    { q:"Как называется профессия человека, который защищает Родину?",
+      a:[ "военный", "солдат", "офицер", "защитник", "военнослужащий" ] },
+
+    { q:"Что носят военные на плечах, чтобы показать своё звание?",
+      a:[ "погоны", "погон" ] },
+
+    { q:"Как называется торжественный проход военных по площади?",
+      a:[ "парад", "военный парад" ] },
+
+    { q:"Какие качества нужны защитнику Родины? (назови два)",
+      a:[ "смелость", "храбрость", "дисциплина", "честность", "доброта", "ответственность", "сила", "выносливость", "дружба", "внимательность" ],
+      multi:true, minHits:2 },
+
+    { q:"Как называется клятва, которую дают военнослужащие?",
+      a:[ "присяга", "военная присяга" ] },
+
+    { q:"Какие войска охраняют границы страны?",
+      a:[ "пограничники", "пограничные войска", "пограничная служба" ] },
+
+    { q:"Какой головной убор носят многие солдаты?",
+      a:[ "фуражка", "берет", "берёт", "каска" ] },
+
+    { q:"Что делают люди в этот день: работают или поздравляют?",
+      a:[ "поздравляют", "празднуют", "отмечают" ] },
+
+    { q:"Какие подарки можно сделать папе или дедушке к 23 февраля?",
+      a:[ "открытка", "рисунок", "подарок", "поделка", "письмо", "сладости", "кружка", "носки" ] },
+
+    { q:"Можно ли девочкам участвовать в военной службе?",
+      a:[ "да", "можно", "конечно" ] },
+
+    { q:"Как ты можешь быть защитником своей Родины уже сейчас?",
+      a:[ "помогать", "учиться", "уважать", "беречь", "быть добрым", "быть честным", "не мусорить", "заботиться", "помогать другим", "соблюдать правила" ] }
+  ];
+
+  // Сектора (будем показывать номера 1..16)
+  const N = 16;
+  let used = Array(N).fill(false);
+  let score = 0;
+
+  // Вращение
+  let rotation = 0;        // текущий угол (рад)
+  let spinning = false;
+  let targetRotation = 0;  // куда докрутить
+  let currentIndex = null; // какой сектор выбран
+
+  const DPR = window.devicePixelRatio || 1;
+
+  function setupCanvas(){
+    // уже задано 900x900; можно под DPR не трогать — но мы сгладим
+    ctx.imageSmoothingEnabled = true;
+    drawWheel();
+  }
+
+  function normalize(s){
+    return (s || "")
+      .toLowerCase()
+      .trim()
+      .replaceAll("ё","е")
+      .replace(/[\.\,\!\?\:\;\-—\(\)\[\]\"\'\“\”]/g," ")
+      .replace(/\s+/g," ");
+  }
+
+  function remainingIndices(){
+    const arr = [];
+    for(let i=0;i<N;i++) if(!used[i]) arr.push(i);
+    return arr;
+  }
+
+  function updateStats(){
+    scoreEl.textContent = String(score);
+    leftEl.textContent = String(remainingIndices().length);
+    if(remainingIndices().length === 0){
+      statusEl.textContent = "Все вопросы пройдены!";
+      statusEl.style.background = "#fef9c3";
+      statusEl.style.border = "1px solid #fde68a";
+    } else {
+      statusEl.textContent = spinning ? "Колесо крутится…" : "Готово к старту";
+      statusEl.style.background = "#ecfeff";
+      statusEl.style.border = "1px solid #cffafe";
+    }
+  }
+
+  function drawWheel(){
+    const w = canvas.width, h = canvas.height;
+    const cx = w/2, cy = h/2;
+    const radius = Math.min(w,h)*0.44;
+    ctx.clearRect(0,0,w,h);
+
+    // тень/подложка
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.beginPath();
+    ctx.arc(0,0,radius+26,0,Math.PI*2);
+    ctx.fillStyle = "#f1f5ff";
+    ctx.fill();
+    ctx.restore();
+
+    const arc = (Math.PI*2)/N;
+
+    // кольцо
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(rotation);
+
+    for(let i=0;i<N;i++){
+      const start = i*arc;
+      const end = start + arc;
+
+      // цвета: приятная пастель
+      const palette = [
+        "#93c5fd","#a7f3d0","#fde68a","#fca5a5",
+        "#c4b5fd","#99f6e4","#fdba74","#f9a8d4"
+      ];
+      const base = palette[i % palette.length];
+      const isUsed = used[i];
+
+      ctx.beginPath();
+      ctx.moveTo(0,0);
+      ctx.arc(0,0,radius,start,end);
+      ctx.closePath();
+
+      ctx.fillStyle = isUsed ? "#d1d5db" : base;
+      ctx.fill();
+
+      // разделители
+      ctx.strokeStyle = "rgba(17,24,39,.10)";
+      ctx.lineWidth = 6;
+      ctx.stroke();
+
+      // подпись сектора (номер)
+      ctx.save();
+      ctx.rotate(start + arc/2);
+      ctx.textAlign = "right";
+      ctx.fillStyle = isUsed ? "rgba(17,24,39,.35)" : "#0f172a";
+      ctx.font = "800 42px Arial Rounded MT Bold, system-ui, sans-serif";
+      ctx.fillText(String(i+1), radius - 22, 16);
+      ctx.restore();
+    }
+
+    // центр
+    ctx.beginPath();
+    ctx.arc(0,0,78,0,Math.PI*2);
+    ctx.fillStyle = "#ffffff";
+    ctx.fill();
+    ctx.lineWidth = 10;
+    ctx.strokeStyle = "#e5e7eb";
+    ctx.stroke();
+
+    ctx.fillStyle = "#0f172a";
+    ctx.font = "900 26px Arial Rounded MT Bold, system-ui, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("КРУТИ!", 0, 10);
+
+    ctx.restore();
+
+    // внешний обод
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.beginPath();
+    ctx.arc(0,0,radius+4,0,Math.PI*2);
+    ctx.lineWidth = 14;
+    ctx.strokeStyle = "rgba(17,24,39,.08)";
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // Индекс сектора под указателем (указатель сверху, в 12 часов)
+  function indexAtPointer(rot){
+    const arc = (Math.PI*2)/N;
+    // Указатель направлен вверх. В canvas 0 рад — вправо. Вверх — -90°.
+    // Мы вращаем колесо, значит ищем какой сектор оказался под углом -90°.
+    const pointerAngle = -Math.PI/2;
+    let a = (pointerAngle - rot) % (Math.PI*2);
+    if(a < 0) a += Math.PI*2;
+    const idx = Math.floor(a / arc);
+    return idx;
+  }
+
+  function easeOutCubic(t){ return 1 - Math.pow(1-t,3); }
+
+  function spin(){
+    const remaining = remainingIndices();
+    if(remaining.length === 0) {
+      openInfoModal("Все вопросы уже были. Нажми «Сброс», чтобы начать заново.");
+      return;
+    }
+    if(spinning) return;
+
+    spinning = true;
+    spinBtn.disabled = true;
+    updateStats();
+
+    // случайный НЕиспользованный сектор, на котором остановимся
+    const pick = remaining[Math.floor(Math.random() * remaining.length)];
+    currentIndex = pick;
+
+    // Подбираем targetRotation так, чтобы pointer -> pick
+    // Добавим много оборотов для эффекта неожиданности
+    const fullSpins = 8 + Math.floor(Math.random()*5); // 8..12
+    const arc = (Math.PI*2)/N;
+    // Хотим: indexAtPointer(targetRotation) === pick
+    // Найдём угол targetRotation, при котором pointer попадает в середину сектора pick.
+    // Берём угол сектора в системе колеса: сектор pick занимает [pick*arc, (pick+1)*arc)
+    // Средина сектора: pick*arc + arc/2. Этот угол должен совпасть с pointerAngle - rot => rot = pointerAngle - mid
+    const pointerAngle = -Math.PI/2;
+    const mid = pick*arc + arc/2;
+    let desired = pointerAngle - mid;
+
+    // нормализуем desired ближе к текущему rotation, но добавим fullSpins*2π
+    // И сделаем вращение по часовой (положительное rot) — добавим 2π*k
+    // desired может быть отрицательным; сделаем цель rotation = desired + 2π*(fullSpins)
+    const TWO_PI = Math.PI*2;
+    // приведем desired к [0..2π) для удобства, но это не обязательно
+    while(desired < 0) desired += TWO_PI;
+    while(desired >= TWO_PI) desired -= TWO_PI;
+
+    // текущую rotation тоже держим в [0..2π) для стабильности
+    rotation = rotation % TWO_PI;
+    if(rotation < 0) rotation += TWO_PI;
+
+    // цель — desired + много оборотов + небольшой случайный микро-сдвиг, чтобы не выглядело “механически”
+    const micro = (Math.random()*0.18 - 0.09) * arc; // +- ~0.09 сектора
+    targetRotation = desired + micro + TWO_PI*fullSpins;
+
+    const startRot = rotation;
+    const delta = targetRotation - startRot;
+
+    const duration = 1400 + Math.floor(Math.random()*500); // 1.4..1.9 сек
+    const startTime = performance.now();
+
+    function anim(now){
+      const t = Math.min(1, (now - startTime)/duration);
+      const e = easeOutCubic(t);
+      rotation = startRot + delta * e;
+      drawWheel();
+      if(t < 1){
+        requestAnimationFrame(anim);
+      } else {
+        // финиш — фиксируем rotation в [0..2π)
+        rotation = rotation % (Math.PI*2);
+        if(rotation < 0) rotation += Math.PI*2;
+        drawWheel();
+
+        spinning = false;
+        spinBtn.disabled = false;
+        updateStats();
+
+        // гарантируем выбранный индекс (на случай micro)
+        // если micro уехал в соседний сектор — подправим к фактическому.
+        const fact = indexAtPointer(rotation);
+        currentIndex = fact;
+
+        // если вдруг выпало на уже использованный (крайне маловероятно) — просто крутим заново
+        if(used[currentIndex]) { spin(); return; }
+
+        used[currentIndex] = true;
+        drawWheel();
+        openQuestion(currentIndex);
+      }
+    }
+    requestAnimationFrame(anim);
+  }
+
+  function openInfoModal(text){
+    qText.textContent = text;
+    answerInp.value = "";
+    feedback.className = "feedback";
+    feedback.textContent = "";
+    overlay.classList.add("show");
+    answerInp.focus();
+  }
+
+  function openQuestion(index){
+    const q = questions[index].q;
+    qText.textContent = `Сектор ${index+1}. ${q}`;
+    answerInp.value = "";
+    feedback.className = "feedback";
+    feedback.textContent = "";
+    overlay.classList.add("show");
+    setTimeout(() => answerInp.focus(), 50);
+  }
+
+  function closeModal(){
+    overlay.classList.remove("show");
+    feedback.className = "feedback";
+    feedback.textContent = "";
+    answerInp.value = "";
+  }
+
+  function checkAnswer(){
+    if(currentIndex === null) return;
+
+    const user = normalize(answerInp.value);
+    const item = questions[currentIndex];
+
+    // если пусто
+    if(!user){
+      feedback.className = "feedback bad show";
+      feedback.textContent = "Напиши ответ (хотя бы одно слово).";
+      return;
+    }
+
+    let ok = false;
+
+    if(item.multi){
+      // требуется минимум minHits ключевых слов (например 2 качества)
+      const hits = new Set();
+      for(const kw of item.a){
+        const nkw = normalize(kw);
+        if(nkw && user.includes(nkw)) hits.add(nkw);
+      }
+      ok = (hits.size >= (item.minHits || 2));
+    } else {
+      // для “да/можно/конечно” и подобных — если ответ содержит любой вариант или совпадает
+      for(const v of item.a){
+        const nv = normalize(v);
+        if(!nv) continue;
+        if(user === nv || user.includes(nv) || nv.includes(user)){
+          ok = true; break;
+        }
+      }
+      // дополнительная логика для вопросов “Кого поздравляют” / “Подарки” / “Как можешь быть защитником”
+      if(!ok){
+        for(const v of item.a){
+          const nv = normalize(v);
+          if(nv && user.includes(nv)){ ok = true; break; }
+        }
+      }
+    }
+
+    if(ok){
+      score += 1;
+      updateStats();
+      feedback.className = "feedback good show";
+      feedback.textContent = "Верно! ⭐ +1 балл. Нажми «Закрыть», чтобы крутить дальше.";
+    } else {
+      feedback.className = "feedback bad show";
+      feedback.textContent = "Пока не засчитано. Попробуй сказать по-другому или попроси ведущего принять ответ 🙂";
+    }
+  }
+
+  function resetGame(){
+    used = Array(N).fill(false);
+    score = 0;
+    currentIndex = null;
+    rotation = 0;
+    spinning = false;
+    spinBtn.disabled = false;
+    drawWheel();
+    updateStats();
+    closeModal();
+  }
+
+  // events
+  spinBtn.addEventListener('click', spin);
+  resetBtn.addEventListener('click', resetGame);
+
+  submitBtn.addEventListener('click', checkAnswer);
+  skipBtn.addEventListener('click', closeModal);
+  closeX.addEventListener('click', closeModal);
+
+  overlay.addEventListener('click', (e) => {
+    if(e.target === overlay) closeModal();
+  });
+
+  answerInp.addEventListener('keydown', (e) => {
+    if(e.key === "Enter") checkAnswer();
+    if(e.key === "Escape") closeModal();
+  });
+
+  // init
+  setupCanvas();
+  updateStats();
+})();
+</script>
+</body>
+</html>
